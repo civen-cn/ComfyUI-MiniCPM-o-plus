@@ -1,0 +1,15 @@
+[project]
+name = "minicpm-o"
+description = "ComfyUI custom nodes for MiniCPM"
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["librosa", "accelerate>=0.26.0", "vector-quantize-pytorch", "vocos"]
+
+[project.urls]
+Repository = "https://github.com/CY-CHENYUE/ComfyUI-MiniCPM-o"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-MiniCPM-o"
+Icon = ""
