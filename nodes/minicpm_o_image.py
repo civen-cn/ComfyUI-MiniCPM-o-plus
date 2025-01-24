@@ -8,7 +8,7 @@ class MiniCPMInference:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("response",)
     FUNCTION = "generate"
-    CATEGORY = "MiniCPM"
+    CATEGORY = "MiniCPM-o"
 
     @classmethod
     def INPUT_TYPES(s):

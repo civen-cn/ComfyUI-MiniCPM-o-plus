@@ -12,7 +12,7 @@ class MiniCPMLoader:
     RETURN_TYPES = ("MODEL", "TOKENIZER")
     RETURN_NAMES = ("model", "tokenizer")
     FUNCTION = "load_model"
-    CATEGORY = "MiniCPM"
+    CATEGORY = "MiniCPM-o"
 
     @classmethod
     def INPUT_TYPES(s):
