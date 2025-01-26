@@ -46,24 +46,28 @@ class MiniCPMLoader:
         try:
             print(f"正在加载模型：{model_path}")
             
-            # 按照官方文档加载模型，添加 local_files_only=True 参数
+            # 设置 transformers 缓存目录为模型目录
+            os.environ['TRANSFORMERS_CACHE'] = str(model_path)
+            os.environ['HF_HOME'] = str(model_path)
+            
+            # 按照官方文档加载模型
             model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                local_files_only=True,  # 强制使用本地文件
-                attn_implementation='sdpa',  # 使用 sdpa 实现
+                local_files_only=True,
+                attn_implementation='sdpa',
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map=device,
-                init_vision=init_vision,   # 用户可选择是否启用视觉功能
-                init_audio=init_audio,     # 用户可选择是否启用音频功能
-                init_tts=init_tts          # 用户可选择是否启用语音合成功能
+                init_vision=init_vision,
+                init_audio=init_audio,
+                init_tts=init_tts
             )
             
             print("正在加载分词器...")
             tokenizer = AutoTokenizer.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                local_files_only=True  # 分词器也强制使用本地文件
+                local_files_only=True
             )
             
             return (model, tokenizer)
