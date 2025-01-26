@@ -18,15 +18,20 @@ class MiniCPMInference:
                 "tokenizer": ("TOKENIZER",),
                 "image": ("IMAGE",),
                 "prompt": ("STRING", {"multiline": True}),
+                "seed": ("INT", {"default": 666666666666666, "min": 0, "max": 0xffffffffffffffff}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 2.0}),
                 "top_p": ("FLOAT", {"default": 0.9, "min": 0.1, "max": 1.0}),
                 "max_new_tokens": ("INT", {"default": 512, "min": 1, "max": 2048}),
             }
         }
 
-    def generate(self, model, tokenizer, image, prompt, temperature=0.7, top_p=0.9, max_new_tokens=512):
+    def generate(self, model, tokenizer, image, prompt, seed, temperature=0.7, top_p=0.9, max_new_tokens=512):
         """生成回答"""
         try:
+            # 设置随机种子
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed(seed)
+
             # print("正在处理输入图像...")
             # ComfyUI 的图像是 NHWC 格式的 tensor
             if len(image.shape) == 4:
@@ -68,5 +73,5 @@ class MiniCPMInference:
             raise e
 
     @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        return float("NaN") 
+    def IS_CHANGED(cls, seed, **kwargs):
+        return seed 
