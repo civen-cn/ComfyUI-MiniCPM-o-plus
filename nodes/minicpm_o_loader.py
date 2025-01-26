@@ -46,28 +46,42 @@ class MiniCPMLoader:
         try:
             print(f"正在加载模型：{model_path}")
             
-            # 设置 transformers 缓存目录为模型目录
-            os.environ['TRANSFORMERS_CACHE'] = str(model_path)
-            os.environ['HF_HOME'] = str(model_path)
+            # 创建符号链接到正确的位置
+            modules_path = model_path / "modules" / "transformers_modules" / model_name
+            modules_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 如果目标文件不存在，创建符号链接
+            if not (modules_path / "image_processing_minicpmv.py").exists():
+                if not modules_path.exists():
+                    modules_path.mkdir(parents=True, exist_ok=True)
+                
+                # 创建符号链接
+                source_file = model_path / "image_processing_minicpmv.py"
+                target_file = modules_path / "image_processing_minicpmv.py"
+                if source_file.exists():
+                    if sys.platform == "win32":
+                        import shutil
+                        shutil.copy2(str(source_file), str(target_file))
+                    else:
+                        if not target_file.exists():
+                            target_file.symlink_to(source_file)
             
             # 按照官方文档加载模型
             model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                local_files_only=True,
-                attn_implementation='sdpa',
+                attn_implementation='sdpa',  # 使用 sdpa 实现
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map=device,
-                init_vision=init_vision,
-                init_audio=init_audio,
-                init_tts=init_tts
+                init_vision=init_vision,   # 用户可选择是否启用视觉功能
+                init_audio=init_audio,     # 用户可选择是否启用音频功能
+                init_tts=init_tts          # 用户可选择是否启用语音合成功能
             )
             
             print("正在加载分词器...")
             tokenizer = AutoTokenizer.from_pretrained(
                 str(model_path),
-                trust_remote_code=True,
-                local_files_only=True
+                trust_remote_code=True
             )
             
             return (model, tokenizer)
