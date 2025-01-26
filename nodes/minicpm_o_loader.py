@@ -46,16 +46,17 @@ class MiniCPMLoader:
         try:
             print(f"正在加载模型：{model_path}")
             
-            # 按照官方文档加载模型
+            # 使用local_files_only=True避免下载额外文件
             model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                attn_implementation='sdpa',  # 使用 sdpa 实现
+                attn_implementation='sdpa',
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map=device,
-                init_vision=init_vision,   # 用户可选择是否启用视觉功能
-                init_audio=init_audio,     # 用户可选择是否启用音频功能
-                init_tts=init_tts          # 用户可选择是否启用语音合成功能
+                init_vision=init_vision,
+                init_audio=init_audio,
+                init_tts=init_tts,
+                local_files_only=True  # 只使用本地文件
             )
             
             print("正在加载分词器...")
