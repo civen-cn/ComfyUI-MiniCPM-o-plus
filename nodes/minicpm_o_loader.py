@@ -41,41 +41,25 @@ class MiniCPMLoader:
     
     def load_model(self, model_name, device, init_vision=True, init_audio=False, init_tts=False):
         """加载模型和tokenizer"""
+        # 确保使用 ComfyUI 的 models 目录
         model_path = Path(folder_paths.models_dir) / "MiniCPM" / model_name
         
         try:
             print(f"正在加载模型：{model_path}")
             
-            # 创建符号链接到正确的位置
-            modules_path = model_path / "modules" / "transformers_modules" / model_name
-            modules_path.parent.mkdir(parents=True, exist_ok=True)
+            if not model_path.exists():
+                raise RuntimeError(f"模型目录不存在: {model_path}")
             
-            # 如果目标文件不存在，创建符号链接
-            if not (modules_path / "image_processing_minicpmv.py").exists():
-                if not modules_path.exists():
-                    modules_path.mkdir(parents=True, exist_ok=True)
-                
-                # 创建符号链接
-                source_file = model_path / "image_processing_minicpmv.py"
-                target_file = modules_path / "image_processing_minicpmv.py"
-                if source_file.exists():
-                    if sys.platform == "win32":
-                        import shutil
-                        shutil.copy2(str(source_file), str(target_file))
-                    else:
-                        if not target_file.exists():
-                            target_file.symlink_to(source_file)
-            
-            # 按照官方文档加载模型
+            # 直接从 ComfyUI models 目录加载模型
             model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                attn_implementation='sdpa',  # 使用 sdpa 实现
+                attn_implementation='sdpa',
                 torch_dtype=torch.float16 if device == "cuda" else torch.float32,
                 device_map=device,
-                init_vision=init_vision,   # 用户可选择是否启用视觉功能
-                init_audio=init_audio,     # 用户可选择是否启用音频功能
-                init_tts=init_tts          # 用户可选择是否启用语音合成功能
+                init_vision=init_vision,
+                init_audio=init_audio,
+                init_tts=init_tts
             )
             
             print("正在加载分词器...")
