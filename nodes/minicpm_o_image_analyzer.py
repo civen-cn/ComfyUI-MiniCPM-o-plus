@@ -8,10 +8,27 @@ class MiniCPMImageAnalyzer:
     
     # 预设的分析提示词
     THEME_PROMPT = """
-    Focus ONLY on the main character/subject in this image. 
-    Describe ONLY: appearance, clothing, pose, and expression.
-    Ignore the background, scene, and artistic style.
-    Format your response as a concise character/subject description for image generation.
+    Describe ONLY the main subject's physical appearance and attire. Focus strictly on:
+    - Physical appearance (features, colors, proportions)
+    - Clothing and accessories (exact details of what they're wearing)
+    - Visible details of the subject itself
+
+    ABSOLUTELY NO:
+    - Background or environment
+    - Lighting or effects
+    - Art style or technique
+    - Composition or layout
+    - Atmosphere or mood
+    - Any elements not directly part of the subject
+
+    Example:
+    A humanoid figure with long black hair and pointed fox-like ears, striking red eyes and sharp facial features, wearing an elaborate white dress with gold-trimmed edges, a prominent star-shaped golden brooch at the chest, and a dark blue cape draped across the shoulders, with triangular decorative elements along the garment edges
+
+    CRITICAL:
+    - Describe ONLY what is physically part of the subject
+    - Stop at the subject's boundaries
+    - One flowing description
+    - No artistic interpretation
     """
     
     SCENE_PROMPT = """
@@ -22,24 +39,25 @@ class MiniCPMImageAnalyzer:
     """
     
     STYLE_PROMPT = """
-    Analyze ONLY the pure artistic style elements of this image.
-    Focus strictly on:
-    - Art medium (digital, oil painting, watercolor, etc.)
-    - Color scheme and palette
-    - Lighting technique
-    - Rendering style (realistic, cartoon, anime, etc.)
-    - Visual effects and textures
-    - Overall artistic approach
+    Identify ONLY the artistic style and visual technique.
 
-    DO NOT describe:
-    - Any characters or subjects
-    - Any specific objects
-    - Scene content or background
-    - Story elements or narrative
-    - Compositional layout
+    Consider:
+    - Art style (e.g., Van Gogh, Ghibli, anime, paper-cut)
+    - Color scheme
+    - Technique (e.g., layered, brushwork, cel-shading)
+    - Visual effect (e.g., soft, sharp, gradient)
 
-    Format your response as a concise style description using only artistic terminology.
-    Example format: "photorealistic digital art with vibrant neon colors, dramatic lighting, glossy textures"
+    CRITICAL:
+    - Output ONLY style and technique
+    - NO content descriptions (no objects, patterns, or subjects)
+    - Format: [art style] with [visual technique and color]
+    - Keep it minimal and precise
+
+    Examples:
+    Paper-cut art with layered monochrome technique.
+    Ghibli style with soft watercolor effects.
+    Van Gogh style with expressive brushstrokes.
+    Anime style with bold cel-shading.
     """
 
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING")
@@ -53,15 +71,39 @@ class MiniCPMImageAnalyzer:
     rendered in {style_analysis}
     """
 
-    # 在类中添加新的提示词模板
+    # 提示词模板
     COMBINE_PROMPT = """
-    Combine these three separate aspects into a single image generation prompt:
-    - Character/Subject: {theme_analysis}
-    - Scene/Environment: {scene_analysis}
-    - Artistic Style: {style_analysis}
+    Create a single image generation prompt that MUST include all elements:
 
-    Create a structured prompt in this format:
-    [character/subject description] in [scene/environment description], [artistic style description]
+    Required Elements:
+    1. Style: {style_analysis}
+    2. Subject: {theme_analysis}
+    3. Scene: {scene_analysis}
+    4. User Element: {user_prompt}
+
+    Composition Rules:
+    1. Start with style description
+    2. For subject/scene integration:
+       - If user element is an action/pose → blend with subject description
+       - If user element is an object → integrate with subject's interaction
+       - If user element is environmental → incorporate into scene
+       - If user element is visual → merge with style
+
+    Structure: [style], featuring [subject with integrated user element] in [scene]
+
+    CRITICAL:
+    - User element MUST be included
+    - Place user element where it fits most naturally
+    - Keep style at the beginning
+    - Make one continuous prompt
+    - NO explanations or markers
+
+    Example with user element "eating ice cream":
+    Minimalist paper-cut art with layered monochrome technique, featuring a tall figure with fox ears and flowing dress elegantly eating ice cream amid tranquil waters and geometric stone formations
+
+    IMPORTANT:
+    - Output ONLY the final prompt
+    - Ensure user element is clearly present
     """
 
     @classmethod
@@ -77,6 +119,9 @@ class MiniCPMImageAnalyzer:
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 2.0}),
                 "top_p": ("FLOAT", {"default": 0.9, "min": 0.1, "max": 1.0}),
                 "max_new_tokens": ("INT", {"default": 512, "min": 1, "max": 2048}),
+            },
+            "optional": {
+                "user_prompt": ("STRING", {"default": "", "multiline": True}),
             }
         }
 
@@ -106,7 +151,7 @@ class MiniCPMImageAnalyzer:
         return response
 
     def analyze(self, model, tokenizer, theme_image, scene_image, style_image, 
-               seed, temperature=0.7, top_p=0.9, max_new_tokens=512):
+               seed, temperature=0.7, top_p=0.9, max_new_tokens=512, user_prompt=""):
         """分析图片并生成组合提示词"""
         try:
             # 设置随机种子
@@ -126,13 +171,14 @@ class MiniCPMImageAnalyzer:
             style_analysis = self.get_analysis(model, tokenizer, style_pil, self.STYLE_PROMPT, 
                                            temperature, top_p, max_new_tokens)
 
-            # 使用大模型融合提示词
+            # 直接在模板中包含用户提示词
             combine_prompt = self.COMBINE_PROMPT.format(
                 theme_analysis=theme_analysis.strip(),
                 scene_analysis=scene_analysis.strip(),
-                style_analysis=style_analysis.strip()
+                style_analysis=style_analysis.strip(),
+                user_prompt=user_prompt.strip() if user_prompt.strip() else "none"
             )
-            
+
             messages = [
                 {
                     'role': 'user',
@@ -147,6 +193,9 @@ class MiniCPMImageAnalyzer:
                 top_p=top_p,
                 max_new_tokens=max_new_tokens
             )
+
+            # # 去掉结果中的引号
+            # combined_prompt = combined_prompt.strip().strip('"').strip("'")
 
             return (theme_analysis, scene_analysis, style_analysis, combined_prompt)
 
