@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import torch
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import folder_paths
 import shutil
 import sys
@@ -16,22 +16,9 @@ class MiniCPMLoader:
 
     @classmethod
     def INPUT_TYPES(s):
-        models_path = Path(folder_paths.models_dir) / "MiniCPM"
-        models_path.mkdir(parents=True, exist_ok=True)
-        
-        model_list = []
-        if models_path.exists():
-            for item in models_path.iterdir():
-                if item.is_dir():
-                    model_list.append(item.name)
-        
-        if not model_list:
-            model_list = ["none"]
-            print(f"警告：在 {models_path} 目录下没有找到模型")
-        
         return {
             "required": {
-                "model_name": (model_list, ),
+                "model_name": (["MiniCPM-o-2_6"],),  # 直接使用固定的模型文件夹名称
                 "device": (["cuda", "cpu"], {"default": "cuda"}),
                 "init_vision": ("BOOLEAN", {"default": True}),  # 是否启用视觉功能
                 "init_audio": ("BOOLEAN", {"default": False}),  # 是否启用音频功能
@@ -39,10 +26,13 @@ class MiniCPMLoader:
             }
         }
     
-    def load_model(self, model_name, device, init_vision=True, init_audio=False, init_tts=False):
+    def load_model(self, model_name, device, attn_implementation="sdpa", init_vision=True, init_audio=False, init_tts=False):
         """加载模型和tokenizer"""
         model_path = Path(folder_paths.models_dir) / "MiniCPM" / model_name
         
+        if not model_path.exists():
+            raise ValueError(f"本地模型未找到：{model_path}。请将模型文件放置在 ComfyUI/models/MiniCPM/MiniCPM-o-2_6 文件夹中。")
+            
         try:
             print(f"正在加载模型：{model_path}")
             
@@ -105,11 +95,11 @@ class MiniCPMLoader:
             os.environ["HF_MODULES_CACHE"] = str(comfyui_root / ".cache/huggingface/modules")
             
             print("\n开始加载模型...")
-            model = AutoModel.from_pretrained(
+            model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                attn_implementation='sdpa', # sdpa or flash_attention_2
-                torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+                attn_implementation=attn_implementation,  # 添加注意力实现参数
+                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
                 device_map=device,
                 init_vision=init_vision,
                 init_audio=init_audio,
