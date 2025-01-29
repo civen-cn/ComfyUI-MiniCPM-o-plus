@@ -2,7 +2,10 @@
 
 这是一个 ComfyUI 的自定义节点，用于在 ComfyUI 中使用 MiniCPM-o 的多模态能力。
 
-还在增加这个节点的功能，希望能用这个模型实时音视频能力在ComfyUI里做一些有趣实用的事情
+还在增加这个节点的功能，希望能用这个模型实时音视频能力在ComfyUI里做一些有趣实用的事情。
+
+当前支持的模型版本：MiniCPM-o 2.6 (2024年1月发布)
+
 
 ## 安装步骤
 
@@ -35,9 +38,27 @@ git clone https://github.com/CY-CHENYUE/ComfyUI-MiniCPM-o.git
   - Temperature（温度）
   - Top-p 采样
   - 最大生成长度
-- 与 ComfyUI 工作流无缝集成
 
-## 使用方法
+## 安装说明
 
-安装完成后，你可以在 ComfyUI 的节点浏览器中找到 "MiniCPM-o" 类别。将节点添加到你的工作流中即可开始使用。
+1. 下载模型文件
+   - 从 [Hugging Face模型仓库](https://huggingface.co/openbmb/MiniCPM-o-2_6) 下载 MiniCPM-o 2.6 模型文件
 
+2. 放置模型文件
+   - 将下载的模型文件放在 ComfyUI 的模型目录下：
+   ```
+   ComfyUI
+   └── models
+       └── MiniCPM
+           └── MiniCPM-o-2_6
+               ├── image_processing_minicpmv.py
+               ├── configuration_minicpm.py
+               ├── modeling_minicpmo.py
+               └── 其他模型文件...
+   ```
+
+3. 模型文件结构
+   - 确保所有必要的文件都在模型目录中
+   - 不要修改文件结构和文件名
+
+4. 注意在ComfyUI 的 Python 安装依赖
