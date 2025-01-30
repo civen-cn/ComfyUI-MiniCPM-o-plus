@@ -10,6 +10,13 @@ class MiniCPMInference:
     FUNCTION = "generate"
     CATEGORY = "MiniCPM-o"
 
+    # 预设的提示词模板
+    TEMPLATE_PROMPT = """Please provide a detailed description of the image according to the following requirements, ensuring that the description can be used to generate images highly similar to the original. Output as plain text without any markdown formatting, headers, or bullet points:
+
+Scene Overview: Describe the overall scene, time of day, and weather conditions. Main Elements: List and describe in detail the main objects, including their appearance characteristics (shape, size, color, material, texture). For people, include details about age, gender, clothing, actions, and expressions. Layout and Composition: Describe the positional relationships of elements and their relative distances. Light and Color: Describe light sources, their direction and intensity, overall color tone and distribution. Style and Atmosphere: Describe the artistic style and overall atmosphere. Details and Supporting Elements: Describe secondary elements, including any text, logos, or symbols.
+
+Please ensure the description is based on visible information in the image, avoiding speculation. The description should be detailed and accurate enough to generate images highly similar to the original. Write everything in a continuous paragraph format without section breaks or special formatting."""
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -17,7 +24,8 @@ class MiniCPMInference:
                 "model": ("MODEL",),
                 "tokenizer": ("TOKENIZER",),
                 "image": ("IMAGE",),
-                "prompt": ("STRING", {"multiline": True}),
+                "prompt_mode": (["Use System Preset", "Use Custom Input"], {"default": "Use System Preset"}),
+                "prompt": ("STRING", {"multiline": True, "default": ""}),
                 "seed": ("INT", {"default": 666666666666666, "min": 0, "max": 0xffffffffffffffff}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 2.0}),
                 "top_p": ("FLOAT", {"default": 0.9, "min": 0.1, "max": 1.0}),
@@ -25,14 +33,13 @@ class MiniCPMInference:
             }
         }
 
-    def generate(self, model, tokenizer, image, prompt, seed, temperature=0.7, top_p=0.9, max_new_tokens=512):
+    def generate(self, model, tokenizer, image, prompt_mode, prompt, seed, temperature=0.7, top_p=0.9, max_new_tokens=512):
         """生成回答"""
         try:
             # 设置随机种子
             torch.manual_seed(seed)
             torch.cuda.manual_seed(seed)
 
-            # print("正在处理输入图像...")
             # ComfyUI 的图像是 NHWC 格式的 tensor
             if len(image.shape) == 4:
                 image = image[0]  # 取第一张图片
@@ -45,16 +52,18 @@ class MiniCPMInference:
             
             print(f"图像大小: {pil_image.size}")
             
+            # 根据选择使用模板提示词或用户输入的提示词
+            final_prompt = self.TEMPLATE_PROMPT if prompt_mode == "Use System Preset" else prompt
+            
             # 按照官方示例构建消息
             messages = [
                 {
                     'role': 'user', 
-                    'content': [pil_image, prompt]
+                    'content': [pil_image, final_prompt]
                 }
             ]
             
             # 生成回答
-            # print("正在生成回答...")
             response = model.chat(
                 msgs=messages,
                 tokenizer=tokenizer,
@@ -63,13 +72,9 @@ class MiniCPMInference:
                 max_new_tokens=max_new_tokens
             )
             
-            # print(f"生成的回答: {response}")
             return (response,)
             
         except Exception as e:
-            # print(f"发生错误: {str(e)}")
-            # print(f"图像形状: {image.shape}")
-            # print(f"图像类型: {type(image)}")
             raise e
 
     @classmethod

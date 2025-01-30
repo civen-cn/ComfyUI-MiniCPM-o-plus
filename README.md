@@ -1,10 +1,23 @@
 # ComfyUI-MiniCPM
 
+[English](README_EN.md) | 简体中文
+
 这是一个 ComfyUI 的自定义节点，用于在 ComfyUI 中使用 MiniCPM-o 的多模态能力。
 
 还在增加这个节点的功能，希望能用这个模型实时音视频能力在ComfyUI里做一些有趣实用的事情。
 
 当前支持的模型版本：MiniCPM-o 2.6 (2024年1月发布)
+
+
+## 功能
+
+### 单图i2t提示词反推。
+
+可以选择预设的提示词或者自己输入提示词。
+
+![alt text](image/WechatIMG38376.jpg)
+
+### 多图i2t提示词反推，输出融合后的提示词
 
 
 ## 安装步骤
@@ -30,15 +43,6 @@ git clone https://github.com/CY-CHENYUE/ComfyUI-MiniCPM-o.git
 ..\..\..\python_embeded\python.exe -m pip install -r requirements.txt
 ```
 
-## 功能特点
-
-- 支持图像和文本输入
-- 支持中英双语对话
-- 可调节的生成参数：
-  - Temperature（温度）
-  - Top-p 采样
-  - 最大生成长度
-
 ## 安装说明
 
 1. 下载模型文件
@@ -62,3 +66,14 @@ git clone https://github.com/CY-CHENYUE/ComfyUI-MiniCPM-o.git
    - 不要修改文件结构和文件名
 
 4. 注意在ComfyUI 的 Python 安装依赖
+
+
+## Contact Me
+
+- X (Twitter): [@cychenyue](https://x.com/cychenyue)
+- TikTok: [@cychenyue](https://www.tiktok.com/@cychenyue)
+- YouTube: [@CY-CHENYUE](https://www.youtube.com/@CY-CHENYUE)
+- BiliBili: [@CY-CHENYUE](https://space.bilibili.com/402808950)
+- 小红书: [@CY-CHENYUE](https://www.xiaohongshu.com/user/profile/6360e61f000000001f01bda0)
+
+---
