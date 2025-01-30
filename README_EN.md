@@ -20,6 +20,8 @@ You can choose from preset prompts or input your own prompts.
 
 Outputs combined prompts from multiple images.
 
+![alt text](image/Snipaste_2025-01-30_20-05-20.png)
+
 ## Installation
 
 ### Method 1: Using ComfyUI Manager (Recommended)
