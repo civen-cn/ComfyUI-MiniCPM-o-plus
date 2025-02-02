@@ -28,17 +28,22 @@ class MiniCPMLoader:
     
     def load_model(self, model_name, device, attn_implementation="sdpa", init_vision=True, init_audio=False, init_tts=False):
         """加载模型和tokenizer"""
-        model_path = Path(folder_paths.models_dir) / "MiniCPM" / model_name
-        
-        if not model_path.exists():
-            raise ValueError(f"本地模型未找到：{model_path}。请将模型文件放置在 ComfyUI/models/MiniCPM/MiniCPM-o-2_6 文件夹中。")
-            
         try:
+            model_path = Path(folder_paths.models_dir) / "MiniCPM" / model_name
+            
+            if not model_path.exists():
+                raise ValueError(f"本地模型未找到：{model_path}。请将模型文件放置在 ComfyUI/models/MiniCPM/MiniCPM-o-2_6 文件夹中。")
+            
             print(f"正在加载模型：{model_path}")
             
             # 使用 ComfyUI 的缓存目录
             comfyui_root = Path(folder_paths.models_dir).parent
             cache_dir = comfyui_root / ".cache/huggingface/modules/transformers_modules" / model_name
+            
+            # 如果缓存目录存在，先删除它
+            if cache_dir.exists():
+                print("清理现有缓存...")
+                shutil.rmtree(str(cache_dir))
             
             # 只在缓存不存在时创建和复制文件
             if not cache_dir.exists():

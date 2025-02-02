@@ -73,37 +73,39 @@ class MiniCPMImageAnalyzer:
 
     # 提示词模板
     COMBINE_PROMPT = """
-    Create a single image generation prompt that MUST include all elements:
+    Create a naturally flowing, cohesive image prompt that seamlessly combines all elements into one unified description.
 
-    Required Elements:
-    1. Style: {style_analysis}
-    2. Subject: {theme_analysis}
-    3. Scene: {scene_analysis}
-    4. User Element: {user_prompt}
+    Elements to integrate:
+    - Style: {style_analysis}
+    - Subject: {theme_analysis}
+    - Scene: {scene_analysis}
+    - Additional element: {user_prompt}
 
-    Composition Rules:
-    1. Start with style description
-    2. For subject/scene integration:
-       - If user element is an action/pose → blend with subject description
-       - If user element is an object → integrate with subject's interaction
-       - If user element is environmental → incorporate into scene
-       - If user element is visual → merge with style
+    Guidelines:
+    1. Create a single, flowing narrative
+    2. Blend all elements naturally without highlighting their sources
+    3. Maintain the richness of scene description
+    4. Ensure style consistency throughout
+    5. Create logical connections between all elements
 
-    Structure: [style], featuring [subject with integrated user element] in [scene]
+    Output Format:
+    [artistic style], [naturally integrated subject and action] in [detailed environmental description]
+
+    Example:
+    Input elements:
+    - Style: Impressionist watercolor
+    - Subject: Young woman in white dress
+    - Scene: Autumn garden with fallen leaves
+    - Additional: Playing violin
+    
+    Output:
+    Impressionist watercolor style with soft brush strokes, a graceful young woman in a flowing white dress playing violin beneath rustling maple trees, surrounded by swirling autumn leaves and dappled sunlight filtering through the golden canopy, creating a symphony of warm colors in the tranquil garden setting
 
     CRITICAL:
-    - User element MUST be included
-    - Place user element where it fits most naturally
-    - Keep style at the beginning
-    - Make one continuous prompt
-    - NO explanations or markers
-
-    Example with user element "eating ice cream":
-    Minimalist paper-cut art with layered monochrome technique, featuring a tall figure with fox ears and flowing dress elegantly eating ice cream amid tranquil waters and geometric stone formations
-
-    IMPORTANT:
-    - Output ONLY the final prompt
-    - Ensure user element is clearly present
+    - Create one seamless description
+    - Maintain scene detail and atmosphere
+    - Ensure natural flow and logical consistency
+    - Never label or separate elements in the final output
     """
 
     @classmethod
