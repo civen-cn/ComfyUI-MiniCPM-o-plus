@@ -30,80 +30,44 @@ class MiniCPMLoader:
         """加载模型和tokenizer"""
         try:
             model_path = Path(folder_paths.models_dir) / "MiniCPM" / model_name
-            
             if not model_path.exists():
                 raise ValueError(f"本地模型未找到：{model_path}。请将模型文件放置在 ComfyUI/models/MiniCPM/MiniCPM-o-2_6 文件夹中。")
             
             print(f"正在加载模型：{model_path}")
             
-            # 使用 ComfyUI 的缓存目录
-            comfyui_root = Path(folder_paths.models_dir).parent
-            cache_dir = comfyui_root / ".cache/huggingface/modules/transformers_modules" / model_name
+            # 检测实际的 transformers 缓存目录
+            from transformers.utils import TRANSFORMERS_CACHE
+            actual_cache = Path(TRANSFORMERS_CACHE)
+            modules_cache = actual_cache.parent / "modules/transformers_modules" / model_name
             
-            # 如果缓存目录存在，先删除它
-            if cache_dir.exists():
-                print("清理现有缓存...")
-                shutil.rmtree(str(cache_dir))
+            # 特别处理 image_processing_minicpmv.py 文件
+            source_file = model_path / "image_processing_minicpmv.py"
+            target_file = modules_cache / "image_processing_minicpmv.py"
             
-            # 只在缓存不存在时创建和复制文件
-            if not cache_dir.exists():
-                # print(f"创建缓存目录：{cache_dir}")
-                cache_dir.mkdir(parents=True, exist_ok=True)
-                
-                # 创建 __init__.py 文件
-                init_file = cache_dir / "__init__.py"
-                if not init_file.exists():
-                    init_file.touch()
-                    # print(f"创建 __init__.py: {init_file}")
-                
-                # 需要复制的文件列表
-                files_to_copy = [
-                    "image_processing_minicpmv.py",
-                    "configuration_minicpm.py",
-                    "modeling_minicpmo.py",
-                    "processing_minicpmo.py",
-                    "modeling_navit_siglip.py",
-                    "resampler.py",
-                    "utils.py"
-                ]
-                
-                # 复制文件到缓存目录
-                copied_files = []
-                missing_files = []
-                for file in files_to_copy:
-                    source = model_path / file
-                    target = cache_dir / file
-                    if source.exists():
-                        # print(f"复制文件到缓存: {file}")
-                        shutil.copy2(str(source), str(target))
-                        copied_files.append(file)
-                    else:
-                        print(f"警告：找不到源文件: {file}")
-                        missing_files.append(file)
-                
-                # print(f"\n成功复制的文件: {len(copied_files)}")
-                for file in copied_files:
-                    ''
-                    # print(f"- {file}")
-                
-                if missing_files:
-                    print(f"\n缺失的文件: {len(missing_files)}")
-                    for file in missing_files:
-                        print(f"- {file}")
-            else:
-                ''
-                # print(f"使用现有缓存：{cache_dir}")
-            
-            # 设置环境变量，确保 transformers 使用正确的缓存目录
-            os.environ["TRANSFORMERS_CACHE"] = str(comfyui_root / ".cache/huggingface")
-            os.environ["HF_HOME"] = str(comfyui_root / ".cache/huggingface")
-            os.environ["HF_MODULES_CACHE"] = str(comfyui_root / ".cache/huggingface/modules")
+            if source_file.exists():
+                try:
+                    # 确保目标目录存在
+                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                    # 复制文件
+                    shutil.copy2(str(source_file), str(target_file))
+                except Exception as copy_error:
+                    # 如果复制失败，尝试使用备用路径
+                    backup_cache = Path(folder_paths.models_dir).parent / ".cache/huggingface/modules/transformers_modules" / model_name
+                    backup_target = backup_cache / "image_processing_minicpmv.py"
+                    
+                    backup_target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(source_file), str(backup_target))
+                    
+                    # 更新环境变量指向新位置
+                    os.environ["TRANSFORMERS_CACHE"] = str(backup_cache.parent.parent)
+                    os.environ["HF_HOME"] = str(backup_cache.parent.parent)
+                    os.environ["HF_MODULES_CACHE"] = str(backup_cache.parent)
             
             print("\n开始加载模型...")
             model = AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 trust_remote_code=True,
-                attn_implementation=attn_implementation,  # 添加注意力实现参数
+                attn_implementation=attn_implementation,
                 torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
                 device_map=device,
                 init_vision=init_vision,
