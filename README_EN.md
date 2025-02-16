@@ -8,6 +8,8 @@ The node's functionality is still being expanded, with the goal of implementing 
 
 Currently supported model version: MiniCPM-o 2.6 (Released January 2024)
 
+![alt text](workflow/MiniCPM-o-V1.png)
+
 ## Features
 
 ### Single Image i2t Prompt Inference
