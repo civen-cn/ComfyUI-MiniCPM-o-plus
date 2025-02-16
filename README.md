@@ -9,6 +9,8 @@
 当前支持的模型版本：MiniCPM-o 2.6 (2024年1月发布)
 
 
+![alt text](workflow/MiniCPM-o-V1.png)
+
 ## 功能
 
 ### 单图i2t提示词反推。
